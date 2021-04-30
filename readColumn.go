@@ -1,21 +1,55 @@
 package main
 
 import (
+	"bufio"
+	"flag"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 )
 
 func main() {
-	var s [3]string
-	s[0] = "1 2 3"
-	s[1] = "11 12 13 14 15 16"
-	s[2] = "-1 2 -3 -4 -5 6"
+	minusCOL := flag.Int("COL", 1, "Column")
+	flag.Parse()
+	flags := flag.Args()
 
-	column := 2
-	for i := 0; i < len(s); i++ {
-		data := strings.Fields(s[i])
-		if len(data) >= column {
-			fmt.Println((data[column-1]))
+	if len(flags) == 0 {
+		fmt.Printf("usage: readColumn <file1> [<file2> [... <fileN>]]\n")
+		os.Exit(1)
+	}
+
+	column := *minusCOL
+
+	if column < 0 {
+		fmt.Println("Invalid Column number!")
+		os.Exit(1)
+	}
+
+	for _, filename := range flags {
+		fmt.Println("\t\t", filename)
+		f, err := os.Open(filename)
+		if err != nil {
+			fmt.Printf("error opening file %s", err)
+			continue
+		}
+		defer f.Close()
+
+		r := bufio.NewReader(f)
+
+		for {
+			line, err := r.ReadString('\n') // if a file doesn't end in a \n this will misbehave
+
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				fmt.Printf("error reading file %s", err)
+			}
+
+			data := strings.Fields(line)
+			if len(data) >= column {
+				fmt.Println((data[column-1]))
+			}
 		}
 	}
 }
